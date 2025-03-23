@@ -31,14 +31,22 @@ class SuperheroeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre_real' => 'required',
-            'nombre_heroe' => 'required'
+            'nombre_real'   => 'required',
+            'nombre_heroe'  => 'required',
+            'foto'          => 'nullable|image',
         ]);
 
-        Superheroe::create($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('foto')) {
+            // Se almacena en storage/app/public/fotos
+            $data['foto'] = $request->file('foto')->store('fotos', 'public');
+        }
+
+        Superheroe::create($data);
 
         return redirect()->route('superheroes.index')
-                         ->with('success', 'Superhéroe creado correctamente');
+                     ->with('success', 'Superhéroe creado correctamente');
     }
 
     /**
@@ -64,21 +72,23 @@ class SuperheroeController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Buscar el superhéroe por ID
         $superheroe = Superheroe::findOrFail($id);
 
-        // Validación de los datos
         $request->validate([
-            'nombre_real' => 'required|string|max:255',
-            'nombre_heroe' => 'required|string|max:255',
-            'foto' => 'nullable|url',
-            'informacion' => 'nullable|string',
+            'nombre_real'   => 'required|string|max:255',
+            'nombre_heroe'  => 'required|string|max:255',
+            'foto'          => 'nullable|image',
+            'informacion'   => 'nullable|string',
         ]);
 
-        // Actualizar los datos
-        $superheroe->update($request->all());
+        $data = $request->all();
 
-        // Redirigir después de la actualización
+        if ($request->hasFile('foto')) {
+            $data['foto'] = $request->file('foto')->store('fotos', 'public');
+        }
+
+        $superheroe->update($data);
+
         return redirect()->route('superheroes.index')
                      ->with('success', 'Superhéroe actualizado correctamente');
     }
@@ -92,5 +102,21 @@ class SuperheroeController extends Controller
         Superheroe::destroy($id);
         return redirect()->route('superheroes.index')
             ->with('success', 'Superhéroe eliminado correctamente');
+    }
+
+    // Mostrar registros eliminados (trashed)
+    public function trashed()
+    {
+        $superheroes = Superheroe::onlyTrashed()->get();
+        return view('superheroes.trashed', compact('superheroes'));
+    }
+
+    // Restaurar un registro eliminado
+    public function restore($id)
+    {
+        $superheroe = Superheroe::onlyTrashed()->findOrFail($id);
+        $superheroe->restore();
+        return redirect()->route('superheroes.trashed')
+                     ->with('success', 'Superhéroe restaurado correctamente');
     }
 }

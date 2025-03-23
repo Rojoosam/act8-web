@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up()
     {
-    Schema::create('superheroes', function (Blueprint $table) {
-        $table->id();
-        $table->string('nombre_real');
-        $table->string('nombre_heroe');
-        $table->string('foto')->nullable();
-        $table->text('informacion')->nullable();
-        $table->timestamps();
-    });
+        Schema::create('superheroes', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre_real');
+            $table->string('nombre_heroe');
+            $table->string('foto')->nullable();
+            $table->text('informacion')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
     }
+
 
 
     /**
